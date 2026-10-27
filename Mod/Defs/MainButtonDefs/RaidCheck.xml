@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Defs>
+  <MainButtonDef>
+    <defName>RaidCheck</defName>
+    <label>Raid check</label>
+    <description>Check conditional raid compositions on demand.</description>
+    <tabWindowClass>RaidCheck.MainTabWindow_RaidCheck</tabWindowClass>
+    <order>170</order>
+    <validWithoutMap>false</validWithoutMap>
+  </MainButtonDef>
+</Defs>

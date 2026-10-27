@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<LanguageData>
+  <RaidCheck.label>襲撃編成</RaidCheck.label>
+  <RaidCheck.description>現在の条件での襲撃編成を手動で試算します。</RaidCheck.description>
+</LanguageData>
