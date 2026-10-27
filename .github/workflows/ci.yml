@@ -1,0 +1,30 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-build-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Core, adapter-contract and UI-lifecycle tests (not real game)
+        run: dotnet run --project Tests -c Release
+      - name: Packaging regression tests
+        run: python3 -m unittest discover -s Tests -p 'test_*.py'
+      - name: Compile against signature-only RimWorld 1.7 references
+        run: dotnet build Source/RaidCheck.csproj -c Release --nologo
+      - name: Validate and package self-authored mod
+        run: python3 tools/package.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RaidCheck-0.1.0-RW1.7-preview
+          path: dist/RaidCheck-0.1.0-RW1.7.zip
+          if-no-files-found: error

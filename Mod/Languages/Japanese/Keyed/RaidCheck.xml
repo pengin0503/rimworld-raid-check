@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<LanguageData>
+  <RC_Title>襲撃編成チェック</RC_Title>
+  <RC_ManualOnly>派閥・戦術・侵入方法を選び「チェック」を押すと試算します。定期的な襲撃計算は行いません。このタブを開いている間は一時停止します。</RC_ManualOnly>
+  <RC_Faction>派閥</RC_Faction>
+  <RC_Strategy>戦術</RC_Strategy>
+  <RC_Arrival>侵入方法</RC_Arrival>
+  <RC_Samples>試算回数</RC_Samples>
+  <RC_None>対象なし</RC_None>
+  <RC_Check>チェック</RC_Check>
+  <RC_Cancel>中止</RC_Cancel>
+  <RC_Progress>試算中 {0}/{1}</RC_Progress>
+  <RC_State_Idle>待機中</RC_State_Idle>
+  <RC_State_Running>試算中</RC_State_Running>
+  <RC_State_Completed>試算完了</RC_State_Completed>
+  <RC_State_Cancelled>中止（途中までの結果）</RC_State_Cancelled>
+  <RC_State_Failed>試算できません</RC_State_Failed>
+  <RC_Limits>指定条件での編成例です。次の襲撃の予告ではありません。イベント固有の乱数倍率・出現位置・装備・クラスターの建物は予測しません。</RC_Limits>
+  <RC_ContextChanged>マップまたはゲームが切り替わりました。結果は計算時のマップのものです。チェックで再試算してください。</RC_ContextChanged>
+  <RC_ConditionsChanged>選択条件が変更されています。表示中の結果は下記の計算時点の条件です。チェックで更新してください。</RC_ConditionsChanged>
+  <RC_Previous>前の例</RC_Previous>
+  <RC_Next>次の例</RC_Next>
+  <RC_ExamplePage>編成例 {0}/{1}</RC_ExamplePage>
+  <RC_Ready>まだ試算していません。現在の襲撃編成を確認したいときに「チェック」を押してください。</RC_Ready>
+  <RC_NotSupported>未対応の生成処理</RC_NotSupported>
+  <RC_Captured>マップ：{0} ｜ ゲーム内経過：{1:0.00}日 ｜ 派閥：{2}</RC_Captured>
+  <RC_CapturedConditions>計算時の条件：{0} ／ {1} ｜ 指定回数：{2}</RC_CapturedConditions>
+  <RC_Points>現在の基準襲撃ポイント：{0:0.##}（イベント固有の乱数倍率は含みません）</RC_Points>
+  <RC_Successes>試算成功：{0}/{1}</RC_Successes>
+  <RC_Failure>{0}（失敗した試算：{1}回）</RC_Failure>
+  <RC_Range>観測した敵人数：最少 {0}、中央値 {1:0.#}、最多 {2}。試算内の観測値であり、理論上の限界ではありません。</RC_Range>
+  <RC_Aggregate>成功した試算での敵種別集計（平均は小数になることがあります）：</RC_Aggregate>
+  <RC_KindAverage>{0} [{1}]：平均 {2:0.##}体 ／ 出現した試算 {3}/{4}回</RC_KindAverage>
+  <RC_Example>編成例 {0}：敵 {1}体 ｜ 補正後の編成ポイント {2:0.##} ｜ 敵種別の基本戦闘力合計 {3:0.##}</RC_Example>
+  <RC_KindCount>{0} [{1}]：{2}体</RC_KindCount>
+  <RC_Error_Points>襲撃ポイントが0以下、または有効な数値ではありません。</RC_Error_Points>
+  <RC_Error_TooMany>1編成10,000体の安全上限を超えました。不完全な編成は集計していません。</RC_Error_TooMany>
+  <RC_Error_PawnKind>敵種別の識別子または戦闘力が不正です。</RC_Error_PawnKind>
+  <RC_Error_Empty>編成を生成できませんでした。敵0体の襲撃を意味するものではありません。</RC_Error_Empty>
+  <RC_Error_Samples>試算回数は10・25・50回から選択してください。</RC_Error_Samples>
+  <RC_Error_Unexpected>編成試算APIでエラーが発生しました。詳細は一度だけログに記録しました。</RC_Error_Unexpected>
+  <RC_Error_NoMap>マップをロードしてからチェックしてください。</RC_Error_NoMap>
+  <RC_Error_Faction>選択した派閥が不在・壊滅・非活動・非敵対のいずれかです。</RC_Error_Faction>
+  <RC_Error_NoCombat>この派閥には戦闘用の編成定義がありません。</RC_Error_NoCombat>
+  <RC_Error_CustomWorker>独自または特殊な生成処理のため、安全な編成試算に対応していません。</RC_Error_CustomWorker>
+  <RC_Error_Choice>選択した戦術または侵入方法の定義がありません。</RC_Error_Choice>
+  <RC_Error_Incompatible>派閥・現在のポイント・マップ・戦術・侵入方法の組み合わせが利用条件を満たしていません。</RC_Error_Incompatible>
+  <RC_Error_Context>計算時のマップまたはゲームから切り替わっています。</RC_Error_Context>
+  <RC_Strategy_ImmediateAttack>即時攻撃</RC_Strategy_ImmediateAttack>
+  <RC_Strategy_ImmediateAttackSmart>賢い即時攻撃</RC_Strategy_ImmediateAttackSmart>
+  <RC_Strategy_StageThenAttack>待機してから攻撃</RC_Strategy_StageThenAttack>
+  <RC_Strategy_Siege>包囲</RC_Strategy_Siege>
+  <RC_Strategy_ImmediateAttackSappers>工兵</RC_Strategy_ImmediateAttackSappers>
+  <RC_Strategy_ImmediateAttackBreaching>破壊</RC_Strategy_ImmediateAttackBreaching>
+  <RC_Strategy_ImmediateAttackBreachingSmart>賢い破壊</RC_Strategy_ImmediateAttackBreachingSmart>
+  <RC_Strategy_EmergeFromWater>水中から出現</RC_Strategy_EmergeFromWater>
+  <RC_Arrival_EdgeWalkIn>マップ端から徒歩</RC_Arrival_EdgeWalkIn>
+  <RC_Arrival_EdgeWalkInGroups>複数方向から徒歩</RC_Arrival_EdgeWalkInGroups>
+  <RC_Arrival_EdgeWalkInDistributed>全方向から徒歩</RC_Arrival_EdgeWalkInDistributed>
+  <RC_Arrival_EdgeWalkInDistributedGroups>分散した徒歩部隊</RC_Arrival_EdgeWalkInDistributedGroups>
+  <RC_Arrival_EdgeDrop>マップ端付近へ降下</RC_Arrival_EdgeDrop>
+  <RC_Arrival_EdgeDropGroups>複数地点へ降下</RC_Arrival_EdgeDropGroups>
+  <RC_Arrival_CenterDrop>拠点付近へ降下</RC_Arrival_CenterDrop>
+  <RC_Arrival_RandomDrop>マップ内へ散開降下</RC_Arrival_RandomDrop>
+  <RC_Arrival_EmergeFromWater>水中から出現</RC_Arrival_EmergeFromWater>
+  <RC_Arrival_EdgeWalkInDarkness>暗闇の中から徒歩</RC_Arrival_EdgeWalkInDarkness>
+</LanguageData>

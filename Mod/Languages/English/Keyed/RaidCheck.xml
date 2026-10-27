@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<LanguageData>
+  <RC_Title>Raid composition check</RC_Title>
+  <RC_ManualOnly>Select a faction, strategy and arrival mode, then press Check. No periodic raid calculations run. The game pauses while this tab is open.</RC_ManualOnly>
+  <RC_Faction>Faction</RC_Faction>
+  <RC_Strategy>Strategy</RC_Strategy>
+  <RC_Arrival>Arrival</RC_Arrival>
+  <RC_Samples>Samples</RC_Samples>
+  <RC_None>None</RC_None>
+  <RC_Check>Check</RC_Check>
+  <RC_Cancel>Cancel</RC_Cancel>
+  <RC_Progress>Calculating {0}/{1}</RC_Progress>
+  <RC_State_Idle>Ready</RC_State_Idle>
+  <RC_State_Running>Calculating</RC_State_Running>
+  <RC_State_Completed>Completed</RC_State_Completed>
+  <RC_State_Cancelled>Cancelled (partial results)</RC_State_Cancelled>
+  <RC_State_Failed>Unable to calculate</RC_State_Failed>
+  <RC_Limits>Conditional composition examples, not the next scheduled raid. Event randomness, landing positions, equipment and cluster buildings are not predicted.</RC_Limits>
+  <RC_ContextChanged>The map or game changed. These results belong to the captured map; press Check to calculate again.</RC_ContextChanged>
+  <RC_ConditionsChanged>The selection changed. Results still describe the conditions printed below. Press Check to update them.</RC_ConditionsChanged>
+  <RC_Previous>Previous</RC_Previous>
+  <RC_Next>Next</RC_Next>
+  <RC_ExamplePage>Example {0}/{1}</RC_ExamplePage>
+  <RC_Ready>No calculation has run. Press Check when you want to inspect the current raid composition.</RC_Ready>
+  <RC_NotSupported>unsupported worker</RC_NotSupported>
+  <RC_Captured>Map: {0} | elapsed game days: {1:0.00} | faction: {2}</RC_Captured>
+  <RC_CapturedConditions>Captured conditions: {0} / {1} | requested samples: {2}</RC_CapturedConditions>
+  <RC_Points>Current base threat points: {0:0.##} (event-specific random scaling excluded)</RC_Points>
+  <RC_Successes>Successful samples: {0}/{1}</RC_Successes>
+  <RC_Failure>{0} ({1} failed attempts)</RC_Failure>
+  <RC_Range>Observed enemy count: minimum {0}, median {1:0.#}, maximum {2}. These are sample observations, not theoretical bounds.</RC_Range>
+  <RC_Aggregate>Enemy kinds across successful samples (averages may be fractional):</RC_Aggregate>
+  <RC_KindAverage>{0} [{1}]: average {2:0.##} per sample; present in {3}/{4}</RC_KindAverage>
+  <RC_Example>Example {0}: {1} enemies | adjusted raid budget {2:0.##} | summed base PawnKind combat power {3:0.##}</RC_Example>
+  <RC_KindCount>{0} [{1}]: {2}</RC_KindCount>
+  <RC_Error_Points>Threat points must be finite and positive.</RC_Error_Points>
+  <RC_Error_TooMany>The 10,000-kind-entry safety limit was exceeded. No partial composition was counted.</RC_Error_TooMany>
+  <RC_Error_PawnKind>A pawn kind has invalid identity or combat power.</RC_Error_PawnKind>
+  <RC_Error_Empty>No valid composition was produced; this is not a zero-enemy raid.</RC_Error_Empty>
+  <RC_Error_Samples>Select 10, 25 or 50 samples.</RC_Error_Samples>
+  <RC_Error_Unexpected>The preview API raised an error. Details were logged once.</RC_Error_Unexpected>
+  <RC_Error_NoMap>Load a map before checking.</RC_Error_NoMap>
+  <RC_Error_Faction>The selected faction is missing, defeated, inactive or not hostile.</RC_Error_Faction>
+  <RC_Error_NoCombat>This faction has no Combat pawn group.</RC_Error_NoCombat>
+  <RC_Error_CustomWorker>This event uses a custom or special worker that cannot be safely previewed.</RC_Error_CustomWorker>
+  <RC_Error_Choice>The selected strategy or arrival definition is unavailable.</RC_Error_Choice>
+  <RC_Error_Incompatible>The faction, current points, map, strategy or arrival mode are incompatible.</RC_Error_Incompatible>
+  <RC_Error_Context>The captured map or game is no longer current.</RC_Error_Context>
+  <RC_Strategy_ImmediateAttack>Immediate attack</RC_Strategy_ImmediateAttack>
+  <RC_Strategy_ImmediateAttackSmart>Smart immediate attack</RC_Strategy_ImmediateAttackSmart>
+  <RC_Strategy_StageThenAttack>Prepare then attack</RC_Strategy_StageThenAttack>
+  <RC_Strategy_Siege>Siege</RC_Strategy_Siege>
+  <RC_Strategy_ImmediateAttackSappers>Sappers</RC_Strategy_ImmediateAttackSappers>
+  <RC_Strategy_ImmediateAttackBreaching>Breaching</RC_Strategy_ImmediateAttackBreaching>
+  <RC_Strategy_ImmediateAttackBreachingSmart>Smart breaching</RC_Strategy_ImmediateAttackBreachingSmart>
+  <RC_Strategy_EmergeFromWater>Emerge from water</RC_Strategy_EmergeFromWater>
+  <RC_Arrival_EdgeWalkIn>Walk in from edge</RC_Arrival_EdgeWalkIn>
+  <RC_Arrival_EdgeWalkInGroups>Walk in from multiple angles</RC_Arrival_EdgeWalkInGroups>
+  <RC_Arrival_EdgeWalkInDistributed>Walk in from all directions</RC_Arrival_EdgeWalkInDistributed>
+  <RC_Arrival_EdgeWalkInDistributedGroups>Distributed walking groups</RC_Arrival_EdgeWalkInDistributedGroups>
+  <RC_Arrival_EdgeDrop>Drop near map edge</RC_Arrival_EdgeDrop>
+  <RC_Arrival_EdgeDropGroups>Multiple drop groups</RC_Arrival_EdgeDropGroups>
+  <RC_Arrival_CenterDrop>Center drop</RC_Arrival_CenterDrop>
+  <RC_Arrival_RandomDrop>Scattered drops</RC_Arrival_RandomDrop>
+  <RC_Arrival_EmergeFromWater>Emerge from water</RC_Arrival_EmergeFromWater>
+  <RC_Arrival_EdgeWalkInDarkness>Walk in darkness</RC_Arrival_EdgeWalkInDarkness>
+</LanguageData>

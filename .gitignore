@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/__pycache__/
+dist/
+.superpowers/
+*.user
+*.suo
+**/Assemblies/*.dll
+**/Assemblies/*.pdb
