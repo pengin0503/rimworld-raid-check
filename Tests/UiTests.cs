@@ -9,6 +9,26 @@ static class UiTests
 {
     internal static void Run()
     {
+        Test("CSV button exports completed snapshot without another calculation",()=>{
+            GameFixture.Reset();string dir=Path.Combine(Path.GetTempPath(),"raid-ui-"+Guid.NewGuid().ToString("N"));GenFilePaths.SaveDataFolderPath=dir;
+            try{var w=new MainTabWindow_RaidCheck();w.PostOpen();Widgets.Click="RC_Check";w.DoWindowContents(new Rect(0,0,1000,700));for(int i=0;i<25;i++)w.WindowUpdate();
+                Widgets.Click="RC_ExportCsv";w.DoWindowContents(new Rect(0,0,1000,700));var files=Directory.GetFiles(Path.Combine(dir,"RaidCheckExports"),"*.csv");Equal(1,files.Length);True(File.ReadAllText(files[0]).Contains("Pirates"));Equal(1,GameFixture.PointReads);Equal(25,GameFixture.Previews);
+            }finally{if(Directory.Exists(dir))Directory.Delete(dir,true);GenFilePaths.SaveDataFolderPath=Path.GetTempPath();}
+        });
+        Test("single selected faction label matches actual selection",()=>{
+            GameFixture.Reset();Find.FactionManager.AllFactionsListForReading.Add(new RimWorld.Faction{Id="tribal",Name="Tribals",def=new(){pawnGroupMakers=[new()]}});
+            var w=new MainTabWindow_RaidCheck();w.PostOpen();Widgets.Click="RC_SelectMultiple";w.DoWindowContents(new Rect(0,0,1000,700));Find.WindowStack.LastMenu!.Options.Single(o=>o.Label.Contains("Tribals")).Action!();
+            Widgets.Click="RC_SelectMultiple";w.DoWindowContents(new Rect(0,0,1000,700));Find.WindowStack.LastMenu!.Options.Single(o=>o.Label.Contains("Pirates")).Action!();
+            Widgets.ButtonLabels.Clear();w.DoWindowContents(new Rect(0,0,1000,700));True(Widgets.ButtonLabels.Contains("RC_Faction: Tribals"));
+        });
+        Test("cancelled and unstarted factions are not reported as generation failures",()=>{
+            GameFixture.Reset();foreach(var name in new[]{"Tribal","Zulu"})Find.FactionManager.AllFactionsListForReading.Add(new RimWorld.Faction{Id=name,Name=name,def=new(){pawnGroupMakers=[new()]}});
+            TestTranslations.Values["RC_ComparisonFailed"]="{0}: {1}";
+            try {var w=new MainTabWindow_RaidCheck();w.PostOpen();foreach(var name in new[]{"Tribal","Zulu"}){Widgets.Click="RC_SelectMultiple";w.DoWindowContents(new Rect(0,0,1000,700));Find.WindowStack.LastMenu!.Options.Single(o=>o.Label.Contains(name)).Action!();}
+                Widgets.Click="RC_Check";w.DoWindowContents(new Rect(0,0,1000,700));for(int i=0;i<25;i++)w.WindowUpdate();Widgets.Click="RC_Cancel";w.DoWindowContents(new Rect(0,0,1000,700));Widgets.Labels.Clear();w.DoWindowContents(new Rect(0,0,1000,700));var text=string.Join("\n",Widgets.Labels);
+                True(text.Contains("Tribal: RC_State_Cancelled"));True(text.Contains("Zulu: RC_NotStarted"));True(!text.Contains("Tribal: RC_Error_Empty"));
+            } finally {TestTranslations.Values.Clear();}
+        });
         Test("opening and idle rendering never read points or sample",()=>{
             GameFixture.Reset();var window=new MainTabWindow_RaidCheck();window.PostOpen();
             for(int i=0;i<10;i++){window.WindowUpdate();window.DoWindowContents(new Rect(0,0,1000,700));}

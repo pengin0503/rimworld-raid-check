@@ -26,6 +26,8 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
     private readonly HashSet<string> selectedFactions = new(StringComparer.Ordinal);
     private readonly HashSet<string> checkedFactions = new(StringComparer.Ordinal);
     private BatchPreviewSession? batch;
+    private PreviewChoice? checkedChoice;
+    private string exportNotice = "";
     private bool IsRunning => batch?.State == PreviewState.Running || session.State == PreviewState.Running;
 
     public MainTabWindow_RaidCheck()
@@ -49,7 +51,7 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
         batch?.Cancel(); session.Cancel(); LogUnexpectedOnce(); batch = null;
         openedGame = Current.Game; openedMap = Find.CurrentMap;
         source = new(); session = new(source);
-        report = summaryText = ""; examples = []; page = 0; scroll = new(); loggedErrors.Clear(); checkedFactions.Clear(); measuredHeight = -1;
+        report = summaryText = exportNotice = ""; checkedChoice = null; examples = []; page = 0; scroll = new(); loggedErrors.Clear(); checkedFactions.Clear(); measuredHeight = -1;
         factions = Current.Game is null || Find.CurrentMap is null ? [] : Find.FactionManager.AllFactionsListForReading
             .Where(f => !f.IsPlayer && !f.defeated && !f.deactivated && f.HostileTo(Faction.OfPlayer) &&
                 f.def.pawnGroupMakers?.Any(g => g.kindDef == PawnGroupKindDefOf.Combat) == true)
@@ -103,7 +105,8 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
         try
         {
             GUI.enabled = wasEnabled && !IsRunning;
-            if (Widgets.ButtonText(new(0, 84, half, 32), T("RC_Faction") + ": " + (factions.FirstOrDefault(f => f.GetUniqueLoadID() == choice.FactionId)?.Name ?? T("RC_None")))) OpenFactions();
+            string factionLabel = selectedFactions.Count > 1 ? F("RC_SelectedCount", selectedFactions.Count) : factions.FirstOrDefault(f => selectedFactions.Contains(f.GetUniqueLoadID()))?.Name ?? T("RC_None");
+            if (Widgets.ButtonText(new(0, 84, half, 32), T("RC_Faction") + ": " + factionLabel)) OpenFactions();
             if (Widgets.ButtonText(new(half + 12, 84, half, 32), T("RC_Strategy") + ": " + StrategyName(choice.StrategyId))) OpenStrategies();
             if (Widgets.ButtonText(new(0, 124, half, 32), T("RC_Arrival") + ": " + ArrivalName(choice.ArrivalId))) OpenArrivals();
             if (Widgets.ButtonText(new(half + 12, 124, half, 32), T("RC_Samples") + ": " + choice.SampleCount))
@@ -112,7 +115,7 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
             GUI.enabled = wasEnabled && !IsRunning && selectedFactions.Count != 0 && Find.CurrentMap is not null;
             if (Widgets.ButtonText(new(0, 168, 150, 32), T("RC_Check")))
             {
-                loggedErrors.Clear(); checkedFactions.Clear(); checkedFactions.UnionWith(selectedFactions); page = 0; report = summaryText = ""; examples = []; scroll = new(); measuredHeight = -1;
+                loggedErrors.Clear(); checkedFactions.Clear(); checkedFactions.UnionWith(selectedFactions); checkedChoice = choice with { FactionId = selectedFactions.First() }; exportNotice = ""; page = 0; report = summaryText = ""; examples = []; scroll = new(); measuredHeight = -1;
                 batch = null;
                 if (selectedFactions.Count == 1)
                 {
@@ -146,6 +149,13 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
         }
         if (batch is not null && !IsRunning && batch.Items.Count > 1 && Widgets.ButtonText(new(rect.width - 180, 268, 180, 28), T("RC_ViewFaction")))
             Find.WindowStack.Add(new FloatMenu(batch.Items.Select(i => new FloatMenuOption(i.Session.Snapshot?.FactionLabel ?? factions.FirstOrDefault(f => f.GetUniqueLoadID() == i.Choice.FactionId)?.Name ?? i.Choice.FactionId, () => { session = i.Session; CacheReport(); })).ToList()));
+        bool oldEnabled = GUI.enabled;
+        try
+        {
+            GUI.enabled = oldEnabled && !IsRunning && checkedChoice is not null;
+            if (Widgets.ButtonText(new(rect.width - 380, 268, 190, 28), T("RC_ExportCsv"))) ExportCsv();
+        }
+        finally { GUI.enabled = oldEnabled; }
         var outer = new Rect(0, 306, rect.width, Math.Max(40, rect.height - 316));
         float width = Math.Max(80, outer.width - 22);
         var displayText = report.Length == 0 ? T("RC_Ready") : report;
@@ -194,10 +204,12 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
         if (batch is not null)
         {
             text.AppendLine(T("RC_Comparison"));
-            foreach (var item in batch.Items)
+            foreach (var selected in batch.Choices)
             {
-                string name = item.Session.Snapshot?.FactionLabel ?? factions.FirstOrDefault(f => f.GetUniqueLoadID() == item.Choice.FactionId)?.Name ?? item.Choice.FactionId;
-                text.AppendLine(item.Session.Summary is { } s ? F("RC_ComparisonLine", name, s.Minimum, s.Median, s.Maximum) : F("RC_ComparisonFailed", name, T(item.Session.Failures.FirstOrDefault()?.Code ?? "RC_Error_Empty")));
+                var item = batch.Items.FirstOrDefault(i => i.Choice.FactionId == selected.FactionId);
+                string name = item?.Session.Snapshot?.FactionLabel ?? factions.FirstOrDefault(f => f.GetUniqueLoadID() == selected.FactionId)?.Name ?? selected.FactionId;
+                string reason = item is null ? T("RC_NotStarted") : item.Session.State == PreviewState.Cancelled ? T("RC_State_Cancelled") : T(item.Session.Failures.FirstOrDefault()?.Code ?? "RC_Error_Empty");
+                text.AppendLine(item?.Session.Summary is { } s ? F("RC_ComparisonLine", name, s.Minimum, s.Median, s.Maximum) + (item.Session.State == PreviewState.Cancelled ? " (" + T("RC_State_Cancelled") + ")" : "") : F("RC_ComparisonFailed", name, reason));
             }
             text.AppendLine();
         }
@@ -242,7 +254,32 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
                 sb.AppendLine(F("RC_KindCount", group.First().Label, group.Key, group.Count()));
             examples[page] = sb.ToString();
         }
-        report = summaryText + (examples.Length > 0 ? "\n" + examples[page] : ""); scroll = new(); measuredHeight = -1;
+        report = (exportNotice.Length > 0 ? exportNotice + "\n\n" : "") + summaryText + (examples.Length > 0 ? "\n" + examples[page] : ""); scroll = new(); measuredHeight = -1;
+    }
+    private void ExportCsv()
+    {
+        try
+        {
+            IReadOnlyList<CsvFaction> records;
+            if (batch is null)
+            {
+                var c = session.Snapshot?.Choice ?? checkedChoice!;
+                records = [new(c, session.Snapshot?.FactionLabel ?? factions.FirstOrDefault(f => f.GetUniqueLoadID() == c.FactionId)?.Name ?? c.FactionId, session)];
+            }
+            else records = batch.Choices.Select(c =>
+            {
+                var item = batch.Items.FirstOrDefault(i => i.Choice.FactionId == c.FactionId);
+                return new CsvFaction(c, item?.Session.Snapshot?.FactionLabel ?? factions.FirstOrDefault(f => f.GetUniqueLoadID() == c.FactionId)?.Name ?? c.FactionId, item?.Session);
+            }).ToArray();
+            var path = RaidCsv.WriteFile(Path.Combine(GenFilePaths.SaveDataFolderPath, "RaidCheckExports"), records);
+            exportNotice = F("RC_ExportSaved", path);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("[Raid Check] CSV export failed: " + ex);
+            exportNotice = F("RC_ExportFailed", ex.Message);
+        }
+        RefreshPage();
     }
     private static string T(string key) => key.Translate().ToString();
     private static string F(string key, params object[] args) => string.Format(CultureInfo.CurrentCulture, T(key), args);

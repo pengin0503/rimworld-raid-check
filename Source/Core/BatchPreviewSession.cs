@@ -5,6 +5,7 @@ public sealed class BatchPreviewSession(Func<IPreviewSource> factory)
     public PreviewState State { get; private set; }
     public List<BatchItem> Items { get; } = [];
     private PreviewChoice[] pending = [];
+    public IReadOnlyList<PreviewChoice> Choices => pending;
     private int next;
     public bool Check(IReadOnlyList<PreviewChoice> choices)
     {

@@ -30,8 +30,10 @@ namespace Verse
     {
         public static string? Click;
         public static List<string> Labels=[];
+        public static List<string> ButtonLabels=[];
         public static bool ButtonText(UnityEngine.Rect rect,string label)
         {
+            ButtonLabels.Add(label);
             if(UnityEngine.GUI.enabled && Click==label){Click=null;return true;}return false;
         }
         public static void Label(UnityEngine.Rect r,string text)=>Labels.Add(text);
