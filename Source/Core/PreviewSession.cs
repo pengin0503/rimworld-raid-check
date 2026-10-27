@@ -3,6 +3,7 @@ namespace RaidCheck.Core;
 public sealed class PreviewSession(IPreviewSource source)
 {
     private readonly IPreviewSource source = source;
+    private PreviewSummaryAccumulator accumulator = new();
     public PreviewState State { get; private set; }
     public PreviewSnapshot? Snapshot { get; private set; }
     public List<SampleResult> Results { get; } = [];
@@ -13,7 +14,7 @@ public sealed class PreviewSession(IPreviewSource source)
     public bool Check(PreviewChoice choice)
     {
         if (State == PreviewState.Running) return false;
-        Results.Clear(); Failures.Clear(); Snapshot = null; Summary = null; UnexpectedError = null;
+        Results.Clear(); Failures.Clear(); Snapshot = null; Summary = null; UnexpectedError = null; accumulator = new();
         try
         {
             if (choice.SampleCount is not (10 or 25 or 50)) throw new PreviewException("RC_Error_Samples");
@@ -33,7 +34,9 @@ public sealed class PreviewSession(IPreviewSource source)
         try
         {
             var result = source.Sample(Snapshot!, Attempted);
-            Results.Add(SampleMaterializer.Read(result.Pawns, result.AdjustedPoints));
+            var validated = SampleMaterializer.Read(result.Pawns, result.AdjustedPoints);
+            accumulator.Add(validated);
+            Results.Add(validated);
         }
         catch (Exception ex) { RecordFailure(ex); }
         if (Attempted >= Snapshot!.Choice.SampleCount)
@@ -48,7 +51,7 @@ public sealed class PreviewSession(IPreviewSource source)
         State = PreviewState.Cancelled;
         Summarize();
     }
-    private void Summarize() => Summary = Results.Count == 0 ? null : PreviewSummary.Create(Results);
+    private void Summarize() => Summary = Results.Count == 0 ? null : accumulator.Build();
     private void RecordFailure(Exception ex)
     {
         if (ex is not PreviewException) UnexpectedError ??= ex;

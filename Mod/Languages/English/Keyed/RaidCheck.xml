@@ -64,4 +64,10 @@
   <RC_Arrival_RandomDrop>Scattered drops</RC_Arrival_RandomDrop>
   <RC_Arrival_EmergeFromWater>Emerge from water</RC_Arrival_EmergeFromWater>
   <RC_Arrival_EdgeWalkInDarkness>Walk in darkness</RC_Arrival_EdgeWalkInDarkness>
+  <RC_SelectMultiple>Select factions</RC_SelectMultiple>
+  <RC_ViewFaction>View faction</RC_ViewFaction>
+  <RC_BatchProgress>Factions {0}/{1}</RC_BatchProgress>
+  <RC_Comparison>Faction comparison</RC_Comparison>
+  <RC_ComparisonLine>{0}: min {1}, median {2:0.#}, max {3}</RC_ComparisonLine>
+  <RC_ComparisonFailed>{0}: {1}</RC_ComparisonFailed>
 </LanguageData>

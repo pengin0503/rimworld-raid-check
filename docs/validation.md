@@ -25,3 +25,9 @@ Local final result: 26 C# tests and 7 Python tests passed; Release reference bui
 - This work does not extend or qualify the separate RimWorld validation host.
 
 The preview ZIP and passing reference/contract checks must not be described as a passed in-game test or a fully validated stable release.
+
+## Batch comparison performance check
+
+A synthetic in-process UI harness generated 25 samples of 10,000 identical pawn kinds and measured the last `WindowUpdate` once on the same machine. Baseline: 56.26 ms and 7,543,840 thread-allocated bytes. After lazy example construction, incremental aggregation and compressed kind storage: 17.72 ms and 677,936 bytes. These single runs are illustrative, not a statistical benchmark or an in-game measurement. Different numbers of distinct pawn kinds and modded workers can behave differently. Each game's native preview API call is still non-preemptible.
+
+The batch changes were checked using C# contract and UI lifecycle tests, package tests and a signature-only reference build. Actual game API behavior, game state invariance, UI rendering and in-game performance remain unverified.

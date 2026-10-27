@@ -17,10 +17,16 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
     private Vector2 scroll;
     private string report = "";
     private string summaryText = "";
-    private string[] examples = [];
+    private string?[] examples = [];
     private int page;
-    private bool loggedError;
+    private readonly HashSet<PreviewSession> loggedErrors = [];
     private float measuredWidth = -1, measuredHeight = -1;
+    private Verse.Game? openedGame;
+    private Map? openedMap;
+    private readonly HashSet<string> selectedFactions = new(StringComparer.Ordinal);
+    private readonly HashSet<string> checkedFactions = new(StringComparer.Ordinal);
+    private BatchPreviewSession? batch;
+    private bool IsRunning => batch?.State == PreviewState.Running || session.State == PreviewState.Running;
 
     public MainTabWindow_RaidCheck()
     {
@@ -35,13 +41,22 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
     public override void PostOpen()
     {
         base.PostOpen();
+        ResetForCurrentMap();
+    }
+
+    private void ResetForCurrentMap()
+    {
+        batch?.Cancel(); session.Cancel(); LogUnexpectedOnce(); batch = null;
+        openedGame = Current.Game; openedMap = Find.CurrentMap;
         source = new(); session = new(source);
-        report = summaryText = ""; examples = []; page = 0; scroll = new(); loggedError = false; measuredHeight = -1;
+        report = summaryText = ""; examples = []; page = 0; scroll = new(); loggedErrors.Clear(); checkedFactions.Clear(); measuredHeight = -1;
         factions = Current.Game is null || Find.CurrentMap is null ? [] : Find.FactionManager.AllFactionsListForReading
             .Where(f => !f.IsPlayer && !f.defeated && !f.deactivated && f.HostileTo(Faction.OfPlayer) &&
                 f.def.pawnGroupMakers?.Any(g => g.kindDef == PawnGroupKindDefOf.Combat) == true)
             .OrderBy(f => f.Name, StringComparer.CurrentCulture).ToList();
         choice = new(factions.FirstOrDefault()?.GetUniqueLoadID() ?? "", "ImmediateAttack", "EdgeWalkIn", 25);
+        selectedFactions.Clear();
+        if (choice.FactionId.Length != 0) selectedFactions.Add(choice.FactionId);
         if (DefDatabase<RaidStrategyDef>.GetNamedSilentFail(choice.StrategyId) is null)
             choice = choice with { StrategyId = DefDatabase<RaidStrategyDef>.AllDefsListForReading.FirstOrDefault(s => WorkerPolicy.SupportsStrategy(s.workerClass))?.defName ?? "" };
         NormalizeArrival();
@@ -49,7 +64,7 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
 
     public override void PreClose()
     {
-        session.Cancel();
+        batch?.Cancel(); session.Cancel();
         LogUnexpectedOnce();
         base.PreClose();
     }
@@ -57,6 +72,21 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
     public override void WindowUpdate()
     {
         base.WindowUpdate();
+        if (!ReferenceEquals(openedGame, Current.Game) || !ReferenceEquals(openedMap, Find.CurrentMap))
+        {
+            ResetForCurrentMap();
+            return;
+        }
+        if (batch?.State == PreviewState.Running)
+        {
+            batch.Advance(true);
+            if (batch.State != PreviewState.Running)
+            {
+                session = batch.Items.FirstOrDefault(i => i.Session.Summary is not null)?.Session ?? batch.Items[^1].Session;
+                CacheReport();
+            }
+            return;
+        }
         if (session.State != PreviewState.Running) return;
         session.Advance(source.ContextMatches()); // At most one sample, only after explicit Check.
         if (session.State != PreviewState.Running) CacheReport();
@@ -72,28 +102,40 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
         bool wasEnabled = GUI.enabled;
         try
         {
-            GUI.enabled = wasEnabled && session.State != PreviewState.Running;
+            GUI.enabled = wasEnabled && !IsRunning;
             if (Widgets.ButtonText(new(0, 84, half, 32), T("RC_Faction") + ": " + (factions.FirstOrDefault(f => f.GetUniqueLoadID() == choice.FactionId)?.Name ?? T("RC_None")))) OpenFactions();
             if (Widgets.ButtonText(new(half + 12, 84, half, 32), T("RC_Strategy") + ": " + StrategyName(choice.StrategyId))) OpenStrategies();
             if (Widgets.ButtonText(new(0, 124, half, 32), T("RC_Arrival") + ": " + ArrivalName(choice.ArrivalId))) OpenArrivals();
             if (Widgets.ButtonText(new(half + 12, 124, half, 32), T("RC_Samples") + ": " + choice.SampleCount))
                 Find.WindowStack.Add(new FloatMenu(new[] {10,25,50}.Select(n => new FloatMenuOption(n.ToString(), () => choice = choice with { SampleCount = n })).ToList()));
-            GUI.enabled = wasEnabled && session.State != PreviewState.Running && choice.FactionId.Length != 0 && Find.CurrentMap is not null;
+            if (Widgets.ButtonText(new(rect.width - 180, 168, 180, 32), T("RC_SelectMultiple"))) OpenBatchFactions();
+            GUI.enabled = wasEnabled && !IsRunning && selectedFactions.Count != 0 && Find.CurrentMap is not null;
             if (Widgets.ButtonText(new(0, 168, 150, 32), T("RC_Check")))
             {
-                loggedError = false; page = 0; report = summaryText = ""; examples = []; scroll = new(); measuredHeight = -1;
-                session.Check(choice);
-                if (session.State != PreviewState.Running) CacheReport();
+                loggedErrors.Clear(); checkedFactions.Clear(); checkedFactions.UnionWith(selectedFactions); page = 0; report = summaryText = ""; examples = []; scroll = new(); measuredHeight = -1;
+                batch = null;
+                if (selectedFactions.Count == 1)
+                {
+                    source = new(); session = new(source); session.Check(choice with { FactionId = selectedFactions.First() });
+                }
+                else
+                {
+                    batch = new BatchPreviewSession(() => { source = new(); return source; });
+                    if (batch.Check(factions.Where(f => selectedFactions.Contains(f.GetUniqueLoadID())).Select(f => choice with { FactionId = f.GetUniqueLoadID() }).ToArray()))
+                        session = batch.Items[0].Session;
+                    else batch = null;
+                }
+                if (!IsRunning) CacheReport();
             }
-            GUI.enabled = wasEnabled && session.State == PreviewState.Running;
-            if (Widgets.ButtonText(new(162, 168, 150, 32), T("RC_Cancel"))) { session.Cancel(); CacheReport(); }
+            GUI.enabled = wasEnabled && IsRunning;
+            if (Widgets.ButtonText(new(162, 168, 150, 32), T("RC_Cancel"))) { batch?.Cancel(); session.Cancel(); CacheReport(); }
         }
         finally { GUI.enabled = wasEnabled; }
 
-        string status = session.State == PreviewState.Running ? F("RC_Progress", session.Attempted, session.Snapshot!.Choice.SampleCount) : T("RC_State_" + session.State);
-        Widgets.Label(new(324, 172, Math.Max(0, rect.width - 324), 28), status);
-        string note = session.Snapshot is not null && !source.ContextMatches() ? T("RC_ContextChanged") :
-            session.Snapshot is not null && session.Snapshot.Choice != choice ? T("RC_ConditionsChanged") : T("RC_Limits");
+        string status = batch?.State == PreviewState.Running ? F("RC_BatchProgress", batch.Items.Count, selectedFactions.Count) : session.State == PreviewState.Running ? F("RC_Progress", session.Attempted, session.Snapshot!.Choice.SampleCount) : T("RC_State_" + (batch?.State ?? session.State));
+        Widgets.Label(new(324, 172, Math.Max(0, rect.width - 510), 28), status);
+        string note = session.Snapshot is not null && (!ReferenceEquals(openedGame, Current.Game) || !ReferenceEquals(openedMap, Find.CurrentMap)) ? T("RC_ContextChanged") :
+            session.Snapshot is not null && (!checkedFactions.SetEquals(selectedFactions) || session.Snapshot.Choice.StrategyId != choice.StrategyId || session.Snapshot.Choice.ArrivalId != choice.ArrivalId || session.Snapshot.Choice.SampleCount != choice.SampleCount) ? T("RC_ConditionsChanged") : T("RC_Limits");
         Widgets.Label(new(0, 212, rect.width, 50), note);
 
         if (examples.Length > 0)
@@ -102,6 +144,8 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
             if (Widgets.ButtonText(new(102, 268, 90, 28), T("RC_Next"))) { page = (page + 1) % examples.Length; RefreshPage(); }
             Widgets.Label(new(210, 270, rect.width - 210, 26), F("RC_ExamplePage", page + 1, examples.Length));
         }
+        if (batch is not null && !IsRunning && batch.Items.Count > 1 && Widgets.ButtonText(new(rect.width - 180, 268, 180, 28), T("RC_ViewFaction")))
+            Find.WindowStack.Add(new FloatMenu(batch.Items.Select(i => new FloatMenuOption(i.Session.Snapshot?.FactionLabel ?? factions.FirstOrDefault(f => f.GetUniqueLoadID() == i.Choice.FactionId)?.Name ?? i.Choice.FactionId, () => { session = i.Session; CacheReport(); })).ToList()));
         var outer = new Rect(0, 306, rect.width, Math.Max(40, rect.height - 316));
         float width = Math.Max(80, outer.width - 22);
         var displayText = report.Length == 0 ? T("RC_Ready") : report;
@@ -116,7 +160,13 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
         Widgets.EndScrollView();
     }
 
-    private void OpenFactions() => Find.WindowStack.Add(new FloatMenu(factions.Select(f => new FloatMenuOption(f.Name, () => choice = choice with { FactionId = f.GetUniqueLoadID() })).ToList()));
+    private Action IfCurrent(Action action)
+    {
+        var game = openedGame; var map = openedMap;
+        return () => { if (ReferenceEquals(game, Current.Game) && ReferenceEquals(map, Find.CurrentMap) && ReferenceEquals(game, openedGame) && ReferenceEquals(map, openedMap)) action(); };
+    }
+    private void OpenFactions() => Find.WindowStack.Add(new FloatMenu(factions.Select(f => new FloatMenuOption(f.Name, IfCurrent(() => { choice = choice with { FactionId = f.GetUniqueLoadID() }; selectedFactions.Clear(); selectedFactions.Add(choice.FactionId); }))).ToList()));
+    private void OpenBatchFactions() => Find.WindowStack.Add(new FloatMenu(factions.Select(f => new FloatMenuOption((selectedFactions.Contains(f.GetUniqueLoadID()) ? "✓ " : "☐ ") + f.Name, IfCurrent(() => { var id = f.GetUniqueLoadID(); if (!selectedFactions.Add(id)) selectedFactions.Remove(id); }))).ToList()));
 
     private void OpenStrategies() => Find.WindowStack.Add(new FloatMenu(DefDatabase<RaidStrategyDef>.AllDefsListForReading
         .Where(s => s.defName != "ImmediateAttackFriendly")
@@ -141,6 +191,16 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
     private void CacheReport()
     {
         var text = new StringBuilder();
+        if (batch is not null)
+        {
+            text.AppendLine(T("RC_Comparison"));
+            foreach (var item in batch.Items)
+            {
+                string name = item.Session.Snapshot?.FactionLabel ?? factions.FirstOrDefault(f => f.GetUniqueLoadID() == item.Choice.FactionId)?.Name ?? item.Choice.FactionId;
+                text.AppendLine(item.Session.Summary is { } s ? F("RC_ComparisonLine", name, s.Minimum, s.Median, s.Maximum) : F("RC_ComparisonFailed", name, T(item.Session.Failures.FirstOrDefault()?.Code ?? "RC_Error_Empty")));
+            }
+            text.AppendLine();
+        }
         var snap = session.Snapshot;
         if (snap is not null)
         {
@@ -157,28 +217,33 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
             foreach (var kind in summary.Kinds) text.AppendLine(F("RC_KindAverage", kind.Label, kind.DefName, kind.MeanCount, kind.PresentInSamples, session.Results.Count));
         }
         summaryText = text.ToString();
-        examples = session.Results.Select((sample, index) =>
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine(F("RC_Example", index + 1, sample.Pawns.Count, sample.AdjustedPoints, sample.Pawns.Sum(p => (double)p.CombatPower)));
-            foreach (var group in sample.Pawns.GroupBy(p => p.DefName).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal))
-                sb.AppendLine(F("RC_KindCount", group.First().Label, group.Key, group.Count()));
-            return sb.ToString();
-        }).ToArray();
+        examples = new string?[session.Results.Count];
         page = 0; RefreshPage();
         LogUnexpectedOnce();
     }
 
     private void LogUnexpectedOnce()
     {
-        if (!loggedError && session.UnexpectedError is { } unexpected)
+        var sessions = batch is null ? new[] { session } : batch.Items.Select(item => item.Session);
+        foreach (var item in sessions)
         {
+            if (item.UnexpectedError is not { } unexpected || !loggedErrors.Add(item)) continue;
             Log.Error("[Raid Check] Preview failed: " + unexpected);
-            loggedError = true;
         }
     }
 
-    private void RefreshPage() { report = summaryText + (examples.Length > 0 ? "\n" + examples[page] : ""); scroll = new(); measuredHeight = -1; }
+    private void RefreshPage()
+    {
+        if (examples.Length > 0 && examples[page] is null)
+        {
+            var sample = session.Results[page]; var sb = new StringBuilder();
+            sb.AppendLine(F("RC_Example", page + 1, sample.Pawns.Count, sample.AdjustedPoints, sample.Pawns.Sum(p => (double)p.CombatPower)));
+            foreach (var group in sample.Pawns.GroupBy(p => p.DefName).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal))
+                sb.AppendLine(F("RC_KindCount", group.First().Label, group.Key, group.Count()));
+            examples[page] = sb.ToString();
+        }
+        report = summaryText + (examples.Length > 0 ? "\n" + examples[page] : ""); scroll = new(); measuredHeight = -1;
+    }
     private static string T(string key) => key.Translate().ToString();
     private static string F(string key, params object[] args) => string.Format(CultureInfo.CurrentCulture, T(key), args);
     private static string StrategyName(string id) => id switch

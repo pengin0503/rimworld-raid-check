@@ -64,4 +64,10 @@
   <RC_Arrival_RandomDrop>マップ内へ散開降下</RC_Arrival_RandomDrop>
   <RC_Arrival_EmergeFromWater>水中から出現</RC_Arrival_EmergeFromWater>
   <RC_Arrival_EdgeWalkInDarkness>暗闇の中から徒歩</RC_Arrival_EdgeWalkInDarkness>
+  <RC_SelectMultiple>複数派閥を選択</RC_SelectMultiple>
+  <RC_ViewFaction>派閥別の詳細</RC_ViewFaction>
+  <RC_BatchProgress>派閥 {0}/{1}</RC_BatchProgress>
+  <RC_Comparison>派閥ごとの比較</RC_Comparison>
+  <RC_ComparisonLine>{0}：最少 {1}、中央値 {2:0.#}、最多 {3}</RC_ComparisonLine>
+  <RC_ComparisonFailed>{0}：{1}</RC_ComparisonFailed>
 </LanguageData>

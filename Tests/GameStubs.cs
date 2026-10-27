@@ -55,7 +55,7 @@ namespace RimWorld
     public class RaidStrategyWorker
     {
         public static bool Usable=true;
-        public virtual bool CanUseWith(IncidentParms p,PawnGroupKindDef g){GameFixture.StrategyValidation=p;return Usable;}
+        public virtual bool CanUseWith(IncidentParms p,PawnGroupKindDef g){GameFixture.StrategyValidation=p;if(p.faction?.Id==GameFixture.ThrowForFaction)throw new InvalidOperationException("faction failure");return Usable;}
     }
     public class RaidStrategyWorker_ImmediateAttack:RaidStrategyWorker { }
     public class RaidStrategyWorker_ImmediateAttackSmart:RaidStrategyWorker { }

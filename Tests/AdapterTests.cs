@@ -13,11 +13,12 @@ static class GameFixture
     internal static IncidentParms? GroupParms,StrategyValidation,ArrivalValidation;
     internal static PawnGroupMakerParms? PreviewParms;
     internal static bool Ensure;
+    internal static string? ThrowForFaction;
     internal static Func<IEnumerable<PawnKindDef>> Kinds=()=>new[]{new PawnKindDef{defName="Lancer",label="lancer",combatPower=150}};
     internal static void Guarded(){if(Rand.Depth==0)throw new Exception("game call outside random isolation");}
     internal static void Reset()
     {
-        PointReads=Adjustments=Previews=0;GroupParms=StrategyValidation=ArrivalValidation=null;PreviewParms=null;
+        PointReads=Adjustments=Previews=0;GroupParms=StrategyValidation=ArrivalValidation=null;PreviewParms=null;ThrowForFaction=null;
         Current.Game=new();Find.CurrentMap=new();Find.FactionManager=new();Rand.Depth=Rand.Pops=0;
         RaidStrategyWorker.Usable=PawnsArrivalModeWorker.Usable=true;
         PawnGroupKindDefOf.Combat.workerClass=typeof(PawnGroupKindWorker_Normal);
