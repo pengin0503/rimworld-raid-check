@@ -8,6 +8,7 @@ static class Program
         CoreTests.Run();
         AdapterTests.Run();
         UiTests.Run();
+        BatchTests.Run();
         Console.WriteLine($"{passed} passed; {failed} failed");
         return failed == 0 ? 0 : 1;
     }

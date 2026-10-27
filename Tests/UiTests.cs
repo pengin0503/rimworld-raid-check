@@ -69,5 +69,41 @@ static class UiTests
             window.DoWindowContents(new Rect(0,0,1000,700));window.WindowUpdate();Equal(0,Log.Errors);
             window.PreClose();Equal(1,Log.Errors);window.PreClose();Equal(1,Log.Errors);
         });
+        Test("idle game replacement refreshes faction choices",()=>{
+            GameFixture.Reset();var window=new MainTabWindow_RaidCheck();window.PostOpen();
+            Current.Game=new();Find.CurrentMap=new();Find.FactionManager=new();
+            Find.FactionManager.AllFactionsListForReading.Add(new RimWorld.Faction{Id="new",Name="New faction",def=new(){pawnGroupMakers=[new()]}});
+            window.WindowUpdate();Widgets.Click="RC_Faction: New faction";window.DoWindowContents(new Rect(0,0,1000,700));
+            True(Find.WindowStack.LastMenu is not null);Equal("New faction",Find.WindowStack.LastMenu!.Options[0].Label);Equal(0,GameFixture.PointReads);
+        });
+        Test("multiple factions can be checked sequentially and compared",()=>{
+            GameFixture.Reset();Find.FactionManager.AllFactionsListForReading.Add(new RimWorld.Faction{Id="tribal",Name="Tribals",def=new(){pawnGroupMakers=[new()]}});
+            var window=new MainTabWindow_RaidCheck();window.PostOpen();Widgets.Click="RC_SelectMultiple";
+            window.DoWindowContents(new Rect(0,0,1000,700));
+            var option=Find.WindowStack.LastMenu!.Options.Single(o=>o.Label.Contains("Tribals"));option.Action!();
+            Widgets.Click="RC_Check";window.DoWindowContents(new Rect(0,0,1000,700));
+            for(int i=0;i<60;i++)window.WindowUpdate();
+            Equal(50,GameFixture.Previews);Equal(2,GameFixture.PointReads);
+            Widgets.Click="RC_ViewFaction";window.DoWindowContents(new Rect(0,0,1000,700));
+            True(Find.WindowStack.LastMenu!.Options.Any(o=>o.Label=="Pirates"));
+            True(Find.WindowStack.LastMenu.Options.Any(o=>o.Label=="Tribals"));
+        });
+        Test("old faction menu cannot change selection after game replacement",()=>{
+            GameFixture.Reset();Find.FactionManager.AllFactionsListForReading.Add(new RimWorld.Faction{Id="old2",Name="Old2",def=new(){pawnGroupMakers=[new()]}});var window=new MainTabWindow_RaidCheck();window.PostOpen();Widgets.Click="RC_SelectMultiple";window.DoWindowContents(new Rect(0,0,1000,700));
+            var old=Find.WindowStack.LastMenu!.Options.Select(o=>o.Action!).ToArray();Current.Game=new();Find.CurrentMap=new();Find.FactionManager=new();window.WindowUpdate();foreach(var action in old)action();
+            Widgets.Click="RC_Check";window.DoWindowContents(new Rect(0,0,1000,700));Equal(0,GameFixture.PointReads);
+        });
+        Test("failed second faction logs error without claiming map changed",()=>{
+            GameFixture.Reset();Log.Errors=0;Find.FactionManager.AllFactionsListForReading.Add(new RimWorld.Faction{Id="tribal",Name="Tribals",def=new(){pawnGroupMakers=[new()]}});
+            var window=new MainTabWindow_RaidCheck();window.PostOpen();Widgets.Click="RC_SelectMultiple";window.DoWindowContents(new Rect(0,0,1000,700));Find.WindowStack.LastMenu!.Options.Single(o=>o.Label.Contains("Tribals")).Action!();
+            GameFixture.ThrowForFaction="tribal";Widgets.Click="RC_Check";window.DoWindowContents(new Rect(0,0,1000,700));for(int i=0;i<30;i++)window.WindowUpdate();
+            Widgets.Labels.Clear();window.DoWindowContents(new Rect(0,0,1000,700));True(!Widgets.Labels.Any(s=>s.Contains("RC_ContextChanged")));Equal(1,Log.Errors);
+        });
+        Test("closing a batch prevents queued faction from starting",()=>{
+            GameFixture.Reset();Find.FactionManager.AllFactionsListForReading.Add(new RimWorld.Faction{Id="tribal",Name="Tribals",def=new(){pawnGroupMakers=[new()]}});
+            var window=new MainTabWindow_RaidCheck();window.PostOpen();Widgets.Click="RC_SelectMultiple";window.DoWindowContents(new Rect(0,0,1000,700));Find.WindowStack.LastMenu!.Options.Single(o=>o.Label.Contains("Tribals")).Action!();
+            Widgets.Click="RC_Check";window.DoWindowContents(new Rect(0,0,1000,700));window.WindowUpdate();window.PreClose();for(int i=0;i<60;i++)window.WindowUpdate();
+            Equal(1,GameFixture.PointReads);Equal(1,GameFixture.Previews);
+        });
     }
 }

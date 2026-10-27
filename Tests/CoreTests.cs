@@ -76,6 +76,16 @@ static class CoreTests
             True(s.Check(Choice with { StrategyId="ImmediateAttack" }));Equal(0,s.Results.Count);
             Equal("ImmediateAttack",s.Snapshot!.Choice.StrategyId);True(s.Summary is null);
         });
+        Test("incremental aggregation preserves per-sample counts and medians",()=>{
+            var a=new PreviewSummaryAccumulator();a.Add(Sample(Pawn("A"),Pawn("B")));a.Add(Sample(Pawn("A"),Pawn("A"),Pawn("A"),Pawn("A")));
+            var s=a.Build();Equal(2,s.Minimum);Equal(3d,s.Median);Equal(4,s.Maximum);Equal(2.5,s.Kinds.Single(k=>k.DefName=="A").MeanCount);Equal(1,s.Kinds.Single(k=>k.DefName=="B").PresentInSamples);
+        });
+        Test("repeated pawn kinds retain counts without retaining each input object",()=>{
+            var sample=SampleMaterializer.Read(Enumerable.Range(0,10000).Select(_=>Pawn("A")),100);
+            Equal(10000,sample.Pawns.Count);Equal(10000,sample.Pawns.Count(p=>p.DefName=="A"));
+            True(ReferenceEquals(sample.Pawns[0],sample.Pawns[9999]));
+            Throws<PreviewException>(()=>SampleMaterializer.Read(sample.Pawns,100,3));
+        });
     }
     internal sealed class Source:IPreviewSource
     {

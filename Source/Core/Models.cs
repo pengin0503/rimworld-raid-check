@@ -18,23 +18,9 @@ public sealed record PreviewSummary(int Minimum, double Median, int Maximum, IRe
 {
     public static PreviewSummary Create(IReadOnlyList<SampleResult> samples)
     {
-        if (samples.Count == 0) throw new ArgumentException("No successful samples", nameof(samples));
-        var counts = samples.Select(s => s.Pawns.Count).Order().ToArray();
-        int middle = counts.Length / 2;
-        double median = counts.Length % 2 == 1 ? counts[middle] : (counts[middle-1] + counts[middle]) / 2d;
-        var totals = new Dictionary<string, (string Label, int Count, int Presence)>(StringComparer.Ordinal);
-        foreach (var sample in samples)
-        {
-            var seen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var pawn in sample.Pawns)
-            {
-                var old = totals.TryGetValue(pawn.DefName, out var value) ? value : (pawn.Label, 0, 0);
-                totals[pawn.DefName] = (old.Item1, old.Item2 + 1, old.Item3 + (seen.Add(pawn.DefName) ? 1 : 0));
-            }
-        }
-        var kinds = totals.Select(p => new KindSummary(p.Key, p.Value.Label, (double)p.Value.Count / samples.Count, p.Value.Presence))
-            .OrderByDescending(k => k.MeanCount).ThenBy(k => k.DefName, StringComparer.Ordinal).ToArray();
-        return new(counts[0], median, counts[^1], Array.AsReadOnly(kinds));
+        var accumulator = new PreviewSummaryAccumulator();
+        foreach (var sample in samples) accumulator.Add(sample);
+        return accumulator.Build();
     }
 }
 public static class SampleMaterializer
@@ -43,16 +29,44 @@ public static class SampleMaterializer
     {
         if (!float.IsFinite(adjustedPoints) || adjustedPoints <= 0 || limit < 1)
             throw new PreviewException("RC_Error_Points");
-        var pawns = new List<PawnEntry>();
+        if (entries is CompressedPawnList compressed)
+        {
+            if (compressed.Count > limit) throw new PreviewException("RC_Error_TooMany");
+            return new(adjustedPoints, compressed);
+        }
+        var kinds = new Dictionary<PawnEntry, int>();
+        int count = 0;
         foreach (var pawn in entries)
         {
-            if (pawns.Count >= limit) throw new PreviewException("RC_Error_TooMany");
+            if (count >= limit) throw new PreviewException("RC_Error_TooMany");
             if (pawn is null || string.IsNullOrWhiteSpace(pawn.DefName) ||
                 !float.IsFinite(pawn.CombatPower) || pawn.CombatPower <= 0)
                 throw new PreviewException("RC_Error_PawnKind");
-            pawns.Add(pawn);
+            kinds.TryGetValue(pawn, out var existing);
+            kinds[pawn] = existing + 1;
+            count++;
         }
-        if (pawns.Count == 0) throw new PreviewException("RC_Error_Empty");
-        return new(adjustedPoints, pawns.AsReadOnly());
+        if (count == 0) throw new PreviewException("RC_Error_Empty");
+        return new(adjustedPoints, new CompressedPawnList(kinds, count));
     }
+}
+
+internal sealed class CompressedPawnList(Dictionary<PawnEntry, int> kinds, int count) : IReadOnlyList<PawnEntry>
+{
+    private readonly KeyValuePair<PawnEntry, int>[] groups = kinds.ToArray();
+    public int Count { get; } = count;
+    public PawnEntry this[int index]
+    {
+        get
+        {
+            if (index < 0 || index >= Count) throw new ArgumentOutOfRangeException(nameof(index));
+            foreach (var group in groups) { if (index < group.Value) return group.Key; index -= group.Value; }
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+    }
+    public IEnumerator<PawnEntry> GetEnumerator()
+    {
+        foreach (var group in groups) for (int i = 0; i < group.Value; i++) yield return group.Key;
+    }
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 }
