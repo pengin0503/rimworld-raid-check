@@ -9,6 +9,7 @@ static class Program
         AdapterTests.Run();
         UiTests.Run();
         BatchTests.Run();
+        CsvTests.Run();
         Console.WriteLine($"{passed} passed; {failed} failed");
         return failed == 0 ? 0 : 1;
     }

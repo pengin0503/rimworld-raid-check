@@ -6,6 +6,7 @@ namespace Verse
     public class Map { public ParentInfo Parent=new(); public int Tile=3; public string GetUniqueLoadID()=>"map1"; }
     public class ParentInfo { public string LabelCap=>"Home"; }
     public class Game { }
+    public static class GenFilePaths { public static string SaveDataFolderPath=Path.GetTempPath(); }
     public static class Current { public static Game? Game=new(); }
     public class TickManager { public int TicksGame=12500; }
     public static class Find

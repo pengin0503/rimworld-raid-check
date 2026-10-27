@@ -70,4 +70,9 @@
   <RC_Comparison>Faction comparison</RC_Comparison>
   <RC_ComparisonLine>{0}: min {1}, median {2:0.#}, max {3}</RC_ComparisonLine>
   <RC_ComparisonFailed>{0}: {1}</RC_ComparisonFailed>
+  <RC_SelectedCount>{0} factions selected</RC_SelectedCount>
+  <RC_NotStarted>Not started</RC_NotStarted>
+  <RC_ExportCsv>Export CSV</RC_ExportCsv>
+  <RC_ExportSaved>CSV saved: {0}</RC_ExportSaved>
+  <RC_ExportFailed>CSV export failed: {0}</RC_ExportFailed>
 </LanguageData>
