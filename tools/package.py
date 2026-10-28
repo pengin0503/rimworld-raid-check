@@ -67,7 +67,7 @@ def build_package(mod_root: Path, output: Path) -> Path:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mod", type=Path, default=Path(__file__).resolve().parents[1] / "Mod")
-    parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "dist/RaidCheck-0.1.0-RW1.7.zip")
+    parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "dist/RaidCheck-1.0.0-RW1.7.zip")
     args = parser.parse_args()
     print(build_package(args.mod, args.output))
 
