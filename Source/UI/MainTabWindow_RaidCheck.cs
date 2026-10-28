@@ -156,7 +156,8 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
             if (Widgets.ButtonText(new(rect.width - 380, 268, 190, 28), T("RC_ExportCsv"))) ExportCsv();
         }
         finally { GUI.enabled = oldEnabled; }
-        var outer = new Rect(0, 306, rect.width, Math.Max(40, rect.height - 316));
+        if (Widgets.ButtonText(new(rect.width - 190, 306, 190, 28), T("RC_OpenExportFolder"))) OpenExportFolder();
+        var outer = new Rect(0, 344, rect.width, Math.Max(40, rect.height - 354));
         float width = Math.Max(80, outer.width - 22);
         var displayText = report.Length == 0 ? T("RC_Ready") : report;
         if (measuredHeight < 0 || measuredWidth != width)
@@ -271,7 +272,7 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
                 var item = batch.Items.FirstOrDefault(i => i.Choice.FactionId == c.FactionId);
                 return new CsvFaction(c, item?.Session.Snapshot?.FactionLabel ?? factions.FirstOrDefault(f => f.GetUniqueLoadID() == c.FactionId)?.Name ?? c.FactionId, item?.Session);
             }).ToArray();
-            var path = RaidCsv.WriteFile(Path.Combine(GenFilePaths.SaveDataFolderPath, "RaidCheckExports"), records);
+            var path = RaidCsv.WriteFile(ExportFolder, records);
             exportNotice = F("RC_ExportSaved", path);
         }
         catch (Exception ex)
@@ -280,6 +281,22 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
             exportNotice = F("RC_ExportFailed", ex.Message);
         }
         RefreshPage();
+    }
+    private static string ExportFolder => Path.Combine(GenFilePaths.SaveDataFolderPath, "RaidCheckExports");
+    private void OpenExportFolder()
+    {
+        try
+        {
+            var folder = Path.GetFullPath(ExportFolder);
+            Directory.CreateDirectory(folder);
+            Application.OpenURL(new Uri(folder + Path.DirectorySeparatorChar).AbsoluteUri);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("[Raid Check] Opening CSV folder failed: " + ex);
+            exportNotice = F("RC_OpenExportFolderFailed", ex.Message);
+            RefreshPage();
+        }
     }
     private static string T(string key) => key.Translate().ToString();
     private static string F(string key, params object[] args) => string.Format(CultureInfo.CurrentCulture, T(key), args);
