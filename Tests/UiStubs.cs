@@ -3,6 +3,7 @@ namespace UnityEngine
     public struct Vector2(float x,float y){public float x=x,y=y;}
     public struct Rect(float x,float y,float width,float height){public float x=x,y=y,width=width,height=height;}
     public static class GUI { public static bool enabled=true; }
+    public static class Application { public static string? LastUrl; public static void OpenURL(string url)=>LastUrl=url; }
 }
 namespace Verse
 {

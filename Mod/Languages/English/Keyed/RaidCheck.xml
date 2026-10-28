@@ -72,6 +72,8 @@
   <RC_ComparisonFailed>{0}: {1}</RC_ComparisonFailed>
   <RC_SelectedCount>{0} factions selected</RC_SelectedCount>
   <RC_NotStarted>Not started</RC_NotStarted>
+  <RC_OpenExportFolder>Open export folder</RC_OpenExportFolder>
+  <RC_OpenExportFolderFailed>Could not open export folder: {0}</RC_OpenExportFolderFailed>
   <RC_ExportCsv>Export CSV</RC_ExportCsv>
   <RC_ExportSaved>CSV saved: {0}</RC_ExportSaved>
   <RC_ExportFailed>CSV export failed: {0}</RC_ExportFailed>

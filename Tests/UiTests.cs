@@ -15,6 +15,13 @@ static class UiTests
                 Widgets.Click="RC_ExportCsv";w.DoWindowContents(new Rect(0,0,1000,700));var files=Directory.GetFiles(Path.Combine(dir,"RaidCheckExports"),"*.csv");Equal(1,files.Length);True(File.ReadAllText(files[0]).Contains("Pirates"));Equal(1,GameFixture.PointReads);Equal(25,GameFixture.Previews);
             }finally{if(Directory.Exists(dir))Directory.Delete(dir,true);GenFilePaths.SaveDataFolderPath=Path.GetTempPath();}
         });
+        Test("open export folder creates and opens the CSV directory only when clicked",()=>{
+            GameFixture.Reset();string dir=Path.Combine(Path.GetTempPath(),"raid folder-"+Guid.NewGuid().ToString("N"));GenFilePaths.SaveDataFolderPath=dir;
+            try{var w=new MainTabWindow_RaidCheck();w.PostOpen();w.DoWindowContents(new Rect(0,0,1000,700));True(!Directory.Exists(dir));
+                Widgets.Click="RC_OpenExportFolder";w.DoWindowContents(new Rect(0,0,1000,700));
+                var folder=Path.Combine(dir,"RaidCheckExports");True(Directory.Exists(folder));Equal(new Uri(folder + Path.DirectorySeparatorChar).AbsoluteUri,UnityEngine.Application.LastUrl);Equal(0,GameFixture.PointReads);Equal(0,GameFixture.Previews);
+            }finally{if(Directory.Exists(dir))Directory.Delete(dir,true);GenFilePaths.SaveDataFolderPath=Path.GetTempPath();}
+        });
         Test("single selected faction label matches actual selection",()=>{
             GameFixture.Reset();Find.FactionManager.AllFactionsListForReading.Add(new RimWorld.Faction{Id="tribal",Name="Tribals",def=new(){pawnGroupMakers=[new()]}});
             var w=new MainTabWindow_RaidCheck();w.PostOpen();Widgets.Click="RC_SelectMultiple";w.DoWindowContents(new Rect(0,0,1000,700));Find.WindowStack.LastMenu!.Options.Single(o=>o.Label.Contains("Tribals")).Action!();

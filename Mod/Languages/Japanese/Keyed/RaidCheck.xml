@@ -72,6 +72,8 @@
   <RC_ComparisonFailed>{0}：{1}</RC_ComparisonFailed>
   <RC_SelectedCount>{0}派閥を選択中</RC_SelectedCount>
   <RC_NotStarted>未実行</RC_NotStarted>
+  <RC_OpenExportFolder>保存先を開く</RC_OpenExportFolder>
+  <RC_OpenExportFolderFailed>保存先を開けませんでした：{0}</RC_OpenExportFolderFailed>
   <RC_ExportCsv>CSV出力</RC_ExportCsv>
   <RC_ExportSaved>CSVを保存しました：{0}</RC_ExportSaved>
   <RC_ExportFailed>CSVの出力に失敗しました：{0}</RC_ExportFailed>
