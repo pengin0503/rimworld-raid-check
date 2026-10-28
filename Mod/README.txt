@@ -1,4 +1,4 @@
-Raid Check 0.1.0 — RimWorld 1.7 preview
+Raid Check 1.0.0 — RimWorld 1.7
 
 展開したRaidCheckフォルダをRimWorld/Modsに配置し、有効化してゲームを再起動してください。
 下部メニューの「襲撃編成」から派閥・戦術・侵入方法・試算回数を選び、「チェック」を押してください。
@@ -12,6 +12,6 @@ Raid Check 0.1.0 — RimWorld 1.7 preview
 
 Extract RaidCheck into RimWorld/Mods, enable it, and restart the game.
 Open Raid check, choose the faction, strategy, arrival and sample count, and press Check.
-No periodic raid calculations. No Harmony dependency. Native API/UI behavior remains unverified in this preview.
+No periodic raid calculations. No Harmony dependency. Native API/UI behavior remains unverified.
 
 Source: https://github.com/pengin0503/rimworld-raid-check

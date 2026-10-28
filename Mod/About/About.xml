@@ -4,9 +4,9 @@
   <author>pengin0503</author>
   <packageId>pengin0503.raidcheck</packageId>
   <url>https://github.com/pengin0503/rimworld-raid-check</url>
-  <description>On-demand raid composition examples for RimWorld 1.7. Includes alternative strategies and arrivals. No background raid calculations. Preview build: actual game UI and native algorithms have not yet been runtime-tested.
+  <description>On-demand raid composition examples for RimWorld 1.7. Includes alternative strategies and arrivals. No background raid calculations. The game UI and native algorithms have not yet been runtime-tested.
 
-RimWorld 1.7用の手動襲撃編成チェック。通常襲撃・工兵・破壊・包囲・降下などに対応。定期計算なし。実ゲーム未検証のプレビュー版です。</description>
+RimWorld 1.7用の手動襲撃編成チェック。通常襲撃・工兵・破壊・包囲・降下などに対応。定期計算なし。実ゲームでのAPI動作と画面は未検証です。</description>
   <supportedVersions>
     <li>1.7</li>
   </supportedVersions>

@@ -25,6 +25,6 @@ jobs:
         run: python3 tools/package.py
       - uses: actions/upload-artifact@v4
         with:
-          name: RaidCheck-0.1.0-RW1.7-preview
-          path: dist/RaidCheck-0.1.0-RW1.7.zip
+          name: RaidCheck-1.0.0-RW1.7
+          path: dist/RaidCheck-1.0.0-RW1.7.zip
           if-no-files-found: error
