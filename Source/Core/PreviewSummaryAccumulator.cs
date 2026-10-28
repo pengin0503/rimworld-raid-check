@@ -8,10 +8,11 @@ public sealed class PreviewSummaryAccumulator
     {
         counts.Add(sample.Pawns.Count);
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var pawn in sample.Pawns)
+        foreach (var group in SampleGroups.Entries(sample.Pawns))
         {
+            var pawn = group.Key;
             var old = totals.TryGetValue(pawn.DefName, out var value) ? value : (pawn.Label, 0, 0);
-            totals[pawn.DefName] = (old.Item1, old.Item2 + 1, old.Item3 + (seen.Add(pawn.DefName) ? 1 : 0));
+            totals[pawn.DefName] = (old.Item1, old.Item2 + group.Value, old.Item3 + (seen.Add(pawn.DefName) ? 1 : 0));
         }
     }
     public PreviewSummary Build()

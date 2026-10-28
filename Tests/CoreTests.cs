@@ -53,6 +53,14 @@ static class CoreTests
             Equal(2.5,a.MeanCount);Equal(2,a.PresentInSamples);Equal(0.5,b.MeanCount);Equal(1,b.PresentInSamples);
             Equal(1d,PreviewSummary.Create(new[]{Sample(Pawn())}).Median);
         });
+        Test("compressed variants preserve first label and per-sample presence",()=>{
+            var p=new[]{Pawn("A","first",20),Pawn("B","other",10),Pawn("A","second",30),Pawn("A","first",20)};
+            var compressed=SampleMaterializer.Read(p,100);
+            var actual=PreviewSummary.Create(new[]{compressed,Sample(Pawn("B","other",10))});
+            var a=actual.Kinds.Single(k=>k.DefName=="A");var b=actual.Kinds.Single(k=>k.DefName=="B");
+            Equal("first",a.Label);Equal(1.5,a.MeanCount);Equal(1,a.PresentInSamples);
+            Equal(1d,b.MeanCount);Equal(2,b.PresentInSamples);
+        });
         Test("bounded materialization rejects malformed power and empty groups", () => {
             Throws<PreviewException>(()=>SampleMaterializer.Read(new[]{Pawn(power:float.NaN)},100));
             Throws<PreviewException>(()=>SampleMaterializer.Read(new[]{Pawn(power:0)},100));
