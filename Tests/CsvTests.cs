@@ -28,7 +28,7 @@ static class CsvTests
             Export();
             long before=GC.GetAllocatedBytesForCurrentThread();Export();
             long bytes=GC.GetAllocatedBytesForCurrentThread()-before;
-            True(bytes < 300000);
+            Console.WriteLine($"CSV export allocation: {bytes} bytes");True(bytes < 300000);
         });
         Test("CSV file is UTF-8 BOM and uses unique names",()=>{
             string dir=Path.Combine(Path.GetTempPath(),"raid-csv-"+Guid.NewGuid().ToString("N"));
