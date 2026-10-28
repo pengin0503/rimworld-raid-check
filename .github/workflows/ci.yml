@@ -28,3 +28,20 @@ jobs:
           name: RaidCheck-1.0.0-RW1.7
           path: dist/RaidCheck-1.0.0-RW1.7.zip
           if-no-files-found: error
+
+  release-v1:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'Release Raid Check v1.0.0'
+    needs: test-build-package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: RaidCheck-1.0.0-RW1.7
+          path: dist
+      - name: Publish v1.0.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create v1.0.0 dist/RaidCheck-1.0.0-RW1.7.zip --target "$GITHUB_SHA" --title "Raid Check v1.0.0" --notes-file docs/releases/v1.0.0.md --latest
