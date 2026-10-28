@@ -30,7 +30,7 @@ jobs:
           if-no-files-found: error
 
   release-v1:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'Release Raid Check v1.0.0'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Release Raid Check v1.0.0')
     needs: test-build-package
     runs-on: ubuntu-latest
     permissions:
