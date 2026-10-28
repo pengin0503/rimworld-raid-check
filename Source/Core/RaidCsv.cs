@@ -19,9 +19,9 @@ public static class RaidCsv
             for(int i=0;i<s.Results.Count;i++)
             {
                 var sample=s.Results[i];
-                foreach(var group in sample.Pawns.GroupBy(p=>p.DefName,StringComparer.Ordinal))
+                foreach(var group in SampleGroups.ByDefName(sample.Pawns))
                 {
-                    var item=(string[])row.Clone();item[0]="sample_kind";item[14]=N(i+1);item[15]=N(sample.AdjustedPoints);item[16]=group.Key;item[17]=group.First().Label;item[18]=N(group.Count());item[19]=N(group.First().CombatPower);item[20]="";Line(writer,item);
+                    var item=(string[])row.Clone();item[0]="sample_kind";item[14]=N(i+1);item[15]=N(sample.AdjustedPoints);item[16]=group.Key;item[17]=group.Value.First.Label;item[18]=N(group.Value.Count);item[19]=N(group.Value.First.CombatPower);item[20]="";Line(writer,item);
                 }
             }
         }

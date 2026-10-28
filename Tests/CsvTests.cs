@@ -20,6 +20,23 @@ static class CsvTests
             using var w=new StringWriter();RaidCsv.Write(w,new[]{new CsvFaction(c,"Failed",s),new CsvFaction(c with {FactionId="next"},"Next",null)});
             var text=w.ToString();True(text.Contains("Failed"));True(text.Contains("NotStarted"));True(text.Contains("no-map"));
         });
+        Test("CSV groups same identity with different metadata preserving first",()=>{
+            var sample=SampleMaterializer.Read(new[]{CoreTests.Pawn("A","first",20),CoreTests.Pawn("B","other",10),CoreTests.Pawn("A","second",30)},100);
+            var session=new PreviewSession(new CoreTests.Source{Next=_=>sample});session.Check(CoreTests.Choice);session.Advance(true);session.Cancel();
+            using var w=new StringWriter();RaidCsv.Write(w,new[]{new CsvFaction(CoreTests.Choice,"Pirates",session)});
+            var lines=w.ToString().Split('\n').Where(x=>x.StartsWith("sample_kind,")).ToArray();
+            Equal(2,lines.Length);True(lines[0].Contains(",A,first,2,20,"));True(lines[1].Contains(",B,other,1,10,"));
+        });
+        Test("CSV export avoids per-pawn temporary allocations",()=>{
+            var sample=SampleMaterializer.Read(Enumerable.Repeat(CoreTests.Pawn(),10000),100);
+            var session=new PreviewSession(new CoreTests.Source{Next=_=>sample});session.Check(CoreTests.Choice);
+            for(int i=0;i<10;i++)session.Advance(true);
+            void Export(){using var w=new StringWriter();RaidCsv.Write(w,new[]{new CsvFaction(CoreTests.Choice,"Pirates",session)});}
+            Export();
+            long before=GC.GetAllocatedBytesForCurrentThread();Export();
+            long bytes=GC.GetAllocatedBytesForCurrentThread()-before;
+            Console.WriteLine($"CSV export allocation: {bytes} bytes");True(bytes < 300000);
+        });
         Test("CSV file is UTF-8 BOM and uses unique names",()=>{
             string dir=Path.Combine(Path.GetTempPath(),"raid-csv-"+Guid.NewGuid().ToString("N"));
             try{var c=CoreTests.Choice;var records=new[]{new CsvFaction(c,"日本語",null)};string a=RaidCsv.WriteFile(dir,records);string b=RaidCsv.WriteFile(dir,records);True(a!=b);var bytes=File.ReadAllBytes(a);True(bytes.Take(3).SequenceEqual(new byte[]{0xef,0xbb,0xbf}));True(System.Text.Encoding.UTF8.GetString(bytes).Contains("日本語"));}

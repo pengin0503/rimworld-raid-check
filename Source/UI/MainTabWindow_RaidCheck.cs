@@ -250,9 +250,9 @@ public sealed class MainTabWindow_RaidCheck : MainTabWindow
         if (examples.Length > 0 && examples[page] is null)
         {
             var sample = session.Results[page]; var sb = new StringBuilder();
-            sb.AppendLine(F("RC_Example", page + 1, sample.Pawns.Count, sample.AdjustedPoints, sample.Pawns.Sum(p => (double)p.CombatPower)));
-            foreach (var group in sample.Pawns.GroupBy(p => p.DefName).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal))
-                sb.AppendLine(F("RC_KindCount", group.First().Label, group.Key, group.Count()));
+            sb.AppendLine(F("RC_Example", page + 1, sample.Pawns.Count, sample.AdjustedPoints, SampleGroups.Entries(sample.Pawns).Sum(g => (double)g.Key.CombatPower * g.Value)));
+            foreach (var group in SampleGroups.ByDefName(sample.Pawns).OrderByDescending(g => g.Value.Count).ThenBy(g => g.Key, StringComparer.Ordinal))
+                sb.AppendLine(F("RC_KindCount", group.Value.First.Label, group.Key, group.Value.Count));
             examples[page] = sb.ToString();
         }
         report = (exportNotice.Length > 0 ? exportNotice + "\n\n" : "") + summaryText + (examples.Length > 0 ? "\n" + examples[page] : ""); scroll = new(); measuredHeight = -1;

@@ -54,6 +54,7 @@ public static class SampleMaterializer
 internal sealed class CompressedPawnList(Dictionary<PawnEntry, int> kinds, int count) : IReadOnlyList<PawnEntry>
 {
     private readonly KeyValuePair<PawnEntry, int>[] groups = kinds.ToArray();
+    internal IReadOnlyList<KeyValuePair<PawnEntry, int>> Groups => groups;
     public int Count { get; } = count;
     public PawnEntry this[int index]
     {
@@ -69,4 +70,33 @@ internal sealed class CompressedPawnList(Dictionary<PawnEntry, int> kinds, int c
         foreach (var group in groups) for (int i = 0; i < group.Value; i++) yield return group.Key;
     }
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+internal static class SampleGroups
+{
+    internal static IEnumerable<KeyValuePair<PawnEntry, int>> Entries(IReadOnlyList<PawnEntry> pawns)
+    {
+        if (pawns is CompressedPawnList compressed)
+        {
+            foreach (var group in compressed.Groups) yield return group;
+        }
+        else
+        {
+            foreach (var pawn in pawns) yield return new(pawn, 1);
+        }
+    }
+
+    internal static Dictionary<string, (PawnEntry First, int Count)> ByDefName(IReadOnlyList<PawnEntry> pawns)
+    {
+        var groups = new Dictionary<string, (PawnEntry First, int Count)>(StringComparer.Ordinal);
+        foreach (var group in Entries(pawns))
+        {
+            var pawn = group.Key;
+            if (groups.TryGetValue(pawn.DefName, out var existing))
+                groups[pawn.DefName] = (existing.First, existing.Count + group.Value);
+            else
+                groups.Add(pawn.DefName, (pawn, group.Value));
+        }
+        return groups;
+    }
 }

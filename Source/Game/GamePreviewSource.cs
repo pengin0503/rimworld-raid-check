@@ -61,8 +61,14 @@ public sealed class GamePreviewSource : IPreviewSource
                 c.Faction, PawnGroupKindDefOf.Combat, c.Map, parms.raidAgeRestriction);
             if (!float.IsFinite(parms.points) || parms.points <= 0) throw new PreviewException("RC_Error_Points");
             var group = IncidentParmsUtility.GetDefaultPawnGroupMakerParms(PawnGroupKindDefOf.Combat, parms, true);
+            var cached = new Dictionary<(string Id, string Label, float Power), PawnEntry>();
             var entries = PawnGroupMakerUtility.GeneratePawnKindsExample(group).Select(kind =>
-                new PawnEntry(kind.defName, kind.label ?? kind.defName, kind.combatPower));
+            {
+                var key = (kind.defName, kind.label ?? kind.defName, kind.combatPower);
+                if (!cached.TryGetValue(key, out var pawn))
+                    cached.Add(key, pawn = new PawnEntry(key.Item1, key.Item2, key.Item3));
+                return pawn;
+            });
             // Full lazy enumeration, including its exceptions, remains inside PushState/finally/PopState.
             return SampleMaterializer.Read(entries, parms.points);
         });
