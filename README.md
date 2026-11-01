@@ -1,53 +1,17 @@
-# Raid Check — 襲撃編成チェック
+# Raid Check / 襲撃編成チェック
 
-RimWorld 1.7で、現在の基準襲撃ポイントを使った**派閥別の編成例**を確認するMODです。人数を平均単価で割るだけでなく、ゲームのPawnKind編成例APIを使います。
+**日本語** | [English](README.en.md)
 
-**v1.0.0は参照DLLでのビルドと制御テストを実施していますが、実ゲームのAPI動作・画面は未検証です。** 検証範囲は[検証記録](docs/validation.md)を参照してください。
+RimWorld 1.7で、現在の襲撃ポイントを使い、派閥ごとの襲撃編成例を試算するMODです。Harmonyは不要です。**実ゲームでのAPI・画面は未検証**です。
 
-## 使い方
+## 導入と使い方
 
-1. 配布ZIPを展開し、`RaidCheck`フォルダを`RimWorld/Mods`へ入れます。
-2. MODを有効化して再起動し、マップをロードします。Harmonyは不要です。
-3. 下部の「襲撃編成」を開き、派閥・戦術・侵入方法と試算回数を選びます。「複数派閥を選択」から複数の派閥を追加すると、同じ戦術と侵入方法で順番に比較できます。
-4. 「チェック」を押すと、10・25・50回（既定25回）の編成試算を実行します。中止・タブを閉じる・マップ切替で停止します。
-5. 人数の観測最少・中央値・観測最多、敵種別ごとの平均・出現回数、個々の編成例を確認します。複数派閥の場合は比較一覧と「派閥別の詳細」を利用できます。利用条件を満たさない派閥は理由を表示し、残りの派閥の試算を続けます。
+配布ZIPの `RaidCheck` フォルダを `RimWorld/Mods` に置き、MODを有効化して再起動します。マップをロードし、下部の「襲撃編成」から派閥・戦術・侵入方法・試算回数を選び「チェック」を押してください。試算は10・25・50回から選べ、複数派閥を比較できます。利用条件を満たさない組み合わせは理由を表示します。
 
-## CSV出力
+結果には人数の観測最少・中央値・最多、敵種別の平均と出現回数、編成例が表示されます。終了または中止後にCSVへ出力できます。保存先はRimWorldのユーザーデータフォルダ内 `RaidCheckExports` です。
 
-試算終了または中止後に「CSV出力」を押すと、全選択派閥の条件・状態・人数集計・編成例を1つのCSVに保存します。未実行・中止・失敗も記録します。保存先はRimWorldのユーザーデータフォルダ内の `RaidCheckExports` で、画面に保存先を表示します。「保存先を開く」ボタンでフォルダーを開けます。UTF-8 BOM付きで、表計算ソフトで式として解釈される可能性のある文字列には先頭にアポストロフィを付けます。`successful_sample_index`は成功した編成例の連番で、失敗を含む試行番号ではありません。出力時に襲撃試算は再実行しません。
+## 試算の範囲
 
-## 初版の対応範囲
+試算は「チェック」を押したときだけ行われ、タブを閉じる、キャンセルする、マップを切り替えると停止します。結果は計算時点のスナップショットで、資産の変化により自動更新されません。実際の襲撃は、その後の生成や他MODの処理によって異なることがあります。
 
-| 項目 | 内容 |
-|---|---|
-| 派閥 | ワールド内の敵対派閥。宙族・蛮族・隠れたメカノイド派閥を含み、標準Combat編成を使う追加派閥も候補に表示 |
-| 戦術 | 即時攻撃、賢い即時攻撃、待機後攻撃、工兵、破壊、賢い破壊、通常の包囲 |
-| 侵入 | マップ端徒歩、複数方向徒歩、マップ端降下、複数地点降下、中央降下、散開降下。対応する定義があれば分散徒歩・水中出現・暗闇徒歩も対象 |
-| ポイント補正 | ゲームの`AdjustedRaidPoints`で選択した戦術・侵入方法に補正。補正済みポイントと戦術を編成APIへ渡す |
-| 表示 | 日本語・英語。計算時点のマップ・経過日数・派閥・条件・ポイント・成功試算数を保持 |
-
-**全派閥と全戦術・侵入方法が自由に組み合わさるわけではありません。** 例えば蛮族の降下やメカノイドの通常包囲はゲーム側の利用条件を満たしません。利用不能の理由を表示し、別条件へ自動変更して計算しません。選択メニューの読込では条件試算せず、「チェック」で検証します。
-
-独自Worker・特殊生成処理は安全のため明示的に未対応にします。メカクラスターの建物、虫の襲来、クエスト固定部隊、アノマリー特殊部隊は初版の対象外です。包囲の迫撃砲・物資も生成しません。地形上の実際の出現地点は解決しないため、出現地点の確保までは保証しません。
-
-## 処理負荷と試算の意味
-
-- 「チェック」以外では襲撃ポイント取得・編成試算を開始しません。Tickパッチ、定期タイマー、常駐計算、Harmonyパッチはありません。
-- タブを開いている間はゲームを一時停止します。チェック開始後は1回のウィンドウ更新につき最大1試算を進めます。閉じた後に計算を続けません。
-- 集計を各試算時に進め、編成例は表示するページだけ作成・キャッシュします。同種の敵は結果内で共有して保持メモリを抑えます。幅変更やページ移動では表示用レイアウトを更新します。
-- Pawn個体・襲撃・Lord・Lootを生成しません。ゲームの乱数を使う処理と遅延列挙をPush/Popのfinally範囲で囲み、フレームをまたいで乱数スコープを保持しません。
-- 1編成10,000体の列挙上限があります。ただし単一のゲームAPI呼出を途中で強制終了することはできず、他MODの停止しない処理への時間保証はありません。
-- 表示は現在の基準ポイントに条件を指定した編成例です。**次の襲撃の予告でも、人数の理論的限界でもありません。** ランディなどのイベント時ランダム倍率、固定クエスト補正、装備・品質・個体能力・キセノタイプ別の内訳は表示しません。表示する戦闘力合計はPawnKindの基本値の合計で、実際の消費ポイントと一致するとは限りません。
-- 標準の編成例APIを利用しますが、実際のPawn生成後の再抽選・補正や他MODの後処理まで同一と保証しません。他MODによるゲームAPI自体のパッチまで完全に隔離するものではありません。
-- 結果はチェック時点のスナップショットです。資産増減で自動更新しません。条件変更後も計算時点の条件を表示し、再チェックを促します。
-
-## English
-
-Raid Check previews possible faction raid compositions in RimWorld 1.7 using the current raid points and the game's composition generator. It is an estimate, not a prediction of the next raid. The v1.0.0 build and control tests passed, but the game API and interface have not been verified in-game.
-
-1. Extract the distribution ZIP and place `RaidCheck` in `RimWorld/Mods`. Enable it and restart. Harmony is not required.
-2. Load a map, open **Raid Check**, choose factions, strategy, arrival method and 10, 25 or 50 samples, then press **Check**.
-3. Review observed minimum, median and maximum counts, enemy types and sample compositions. Invalid combinations show a reason rather than silently changing the selection.
-4. After completion or cancellation, export all selected factions to a UTF-8 CSV in the user data folder's `RaidCheckExports` directory.
-
-The mod calculates only when requested and stops on cancellation, closing the tab or changing maps. Results are a snapshot and do not update automatically as wealth changes. Actual raids may differ due to later generation and other mods. Special workers, mech clusters, infestations, quest and Anomaly special forces, siege supplies and actual spawn locations are outside this version's scope.
+独自の特殊生成、メカクラスター、虫、クエストやアノマリーの特殊部隊、包囲の物資、実際の出現地点は対象外です。通常の襲撃であっても、すべての派閥・戦術・侵入方法を自由に組み合わせられるわけではありません。
