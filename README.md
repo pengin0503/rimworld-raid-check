@@ -41,17 +41,13 @@ RimWorld 1.7で、現在の基準襲撃ポイントを使った**派閥別の編
 - 標準の編成例APIを利用しますが、実際のPawn生成後の再抽選・補正や他MODの後処理まで同一と保証しません。他MODによるゲームAPI自体のパッチまで完全に隔離するものではありません。
 - 結果はチェック時点のスナップショットです。資産増減で自動更新しません。条件変更後も計算時点の条件を表示し、再チェックを促します。
 
-## 開発
+## English
 
-必要環境は.NET SDK 10とPython 3です。
+Raid Check previews possible faction raid compositions in RimWorld 1.7 using the current raid points and the game's composition generator. It is an estimate, not a prediction of the next raid. The v1.0.0 build and control tests passed, but the game API and interface have not been verified in-game.
 
-```sh
-dotnet run --project Tests -c Release
-python3 -m unittest discover -s Tests -p 'test_*.py'
-dotnet build Source/RaidCheck.csproj -c Release
-python3 tools/package.py
-```
+1. Extract the distribution ZIP and place `RaidCheck` in `RimWorld/Mods`. Enable it and restart. Harmony is not required.
+2. Load a map, open **Raid Check**, choose factions, strategy, arrival method and 10, 25 or 50 samples, then press **Check**.
+3. Review observed minimum, median and maximum counts, enemy types and sample compositions. Invalid combinations show a reason rather than silently changing the selection.
+4. After completion or cancellation, export all selected factions to a UTF-8 CSV in the user data folder's `RaidCheckExports` directory.
 
-ビルドには`Krafs.Rimworld.Ref 1.7.4985-unstable`の署名のみの参照パッケージを使用します。インストールZIPには自作DLL・定義・翻訳・説明だけを含めます。ゲーム本体や第三者MODは含めません。CIも参照ビルドと自作テストのみを実行します。
-
-CIの`RaidCheck-1.0.0-RW1.7`アーティファクト内のZIPをそのままインストール用に使用できます。
+The mod calculates only when requested and stops on cancellation, closing the tab or changing maps. Results are a snapshot and do not update automatically as wealth changes. Actual raids may differ due to later generation and other mods. Special workers, mech clusters, infestations, quest and Anomaly special forces, siege supplies and actual spawn locations are outside this version's scope.
